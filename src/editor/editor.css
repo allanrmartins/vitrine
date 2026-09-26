@@ -878,6 +878,30 @@ select.input {
   margin: 0;
   font-size: 13px;
 }
+.ai-off-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+.ai-off-body ul {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.ai-off-body li + li {
+  margin-top: 4px;
+}
+.ai-off-body strong {
+  color: var(--text);
+}
+.ai-provider {
+  width: auto;
+  padding: 3px 8px;
+  font-size: 12.5px;
+}
 .ai-photos {
   display: flex;
   flex-wrap: wrap;

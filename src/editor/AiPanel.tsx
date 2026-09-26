@@ -1,12 +1,33 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, Eraser, Loader2, Sparkles, Square, Star, Undo2, Wand2, X, ImagePlus } from 'lucide-react';
+import { Check, Eraser, Loader2, RefreshCw, Sparkles, Square, Star, Undo2, Wand2, X, ImagePlus } from 'lucide-react';
 import type { AdData } from '../types.ts';
-import { fromAiDraft, toAiDraft, type AiRequest, type AiResult } from '../engine/aiDraft.ts';
+import {
+  fromAiDraft,
+  PROVIDER_NAMES,
+  toAiDraft,
+  type AiRequest,
+  type AiResult,
+  type AiStatus,
+  type ProviderId,
+  type RunInfo,
+} from '../engine/aiDraft.ts';
 import { fileToDataUrl, urlToBlob } from '../engine/image.ts';
 import { useStoreImage } from './assets.tsx';
 import type { HeroCutout } from './useHeroCutout.ts';
 
-type Status = 'checking' | 'online' | 'offline';
+/** `noServer`: editor hospedado, sem a API local. `noAi`: servidor ok, mas nenhuma IA instalada e logada. */
+type Status = 'checking' | 'online' | 'noServer' | 'noAi';
+
+const CHOICE_KEY = 'vitrine.ia';
+
+function readChoice(): ProviderId | null {
+  try {
+    const v = localStorage.getItem(CHOICE_KEY);
+    return v === 'claude' || v === 'gemini' ? v : null;
+  } catch {
+    return null;
+  }
+}
 
 async function asDataUrl(src: string): Promise<string> {
   return src.startsWith('data:') ? src : fileToDataUrl(await urlToBlob(src));
@@ -36,6 +57,12 @@ export function AiPanel({
   const hero = data.images.main;
   const heroOriginal = data.images.mainOriginal ?? null;
   const [status, setStatus] = useState<Status>('checking');
+  const [ai, setAi] = useState<AiStatus | null>(null);
+  const [choice, setChoice] = useState<ProviderId | null>(readChoice);
+  const ready = ai?.providers.filter((p) => p.ready) ?? [];
+  // A escolhida no editor, se ainda estiver pronta; senão a padrão do servidor.
+  const provider = ready.some((p) => p.id === choice) ? choice : (ai?.active ?? null);
+  const providerName = provider ? PROVIDER_NAMES[provider] : 'IA';
   const [localPhotos, setLocalPhotos] = useState<string[]>([]);
   const [excluded, setExcluded] = useState<Set<string>>(() => new Set());
   const tray = folderPhotos ?? localPhotos;
@@ -50,12 +77,27 @@ export function AiPanel({
   const storeImage = useStoreImage();
   const fileInput = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    fetch('/api/claude')
+  const check = (refresh = false) => {
+    setStatus('checking');
+    fetch(`/api/ia${refresh ? '?refresh=1' : ''}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((j: { ok?: boolean }) => setStatus(j.ok ? 'online' : 'offline'))
-      .catch(() => setStatus('offline'));
-  }, []);
+      .then((j: AiStatus) => {
+        if (!Array.isArray(j.providers)) throw new Error();
+        setAi(j);
+        setStatus(j.active ? 'online' : 'noAi');
+      })
+      .catch(() => setStatus('noServer'));
+  };
+  useEffect(check, []);
+
+  const choose = (id: ProviderId) => {
+    setChoice(id);
+    try {
+      localStorage.setItem(CHOICE_KEY, id);
+    } catch {
+      // Sem storage (aba privada): a escolha vale só até recarregar.
+    }
+  };
 
   // Trocar de projeto desmonta o painel: cancela a geração em andamento para o resultado não cair no projeto novo.
   useEffect(() => () => abort.current?.abort(), []);
@@ -88,21 +130,21 @@ export function AiPanel({
     try {
       // No modo gerar, as fotos novas ganham os primeiros números: são o material principal.
       const { draft, photos: list } = toAiDraft(data, mode === 'generate' ? photos : []);
-      // O Claude recebe o conteúdo das fotos; o anúncio continua apontando para os arquivos originais (`list`).
-      const body: AiRequest = { mode, instruction, photos: await Promise.all(list.map(asDataUrl)), draft };
-      const res = await fetch('/api/claude', {
+      // A IA recebe o conteúdo das fotos; o anúncio continua apontando para os arquivos originais (`list`).
+      const body: AiRequest = { mode, instruction, photos: await Promise.all(list.map(asDataUrl)), draft, provider: provider ?? undefined };
+      const res = await fetch('/api/ia', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
         signal,
       });
-      const json = (await res.json()) as (AiResult & { durationMs: number; costUsd: number | null }) | { error: string };
+      const json = (await res.json()) as (AiResult & RunInfo) | { error: string };
       if ('error' in json) throw new Error(json.error);
       if (signal.aborted) return;
       setUndo(data);
       onApply(fromAiDraft(json.draft, list, data), mode === 'generate' ? 'Anúncio gerado' : 'Ajuste aplicado');
       if (mode === 'tweak') setTweak('');
-      const meta = `${Math.round(json.durationMs / 1000)}s${json.costUsd ? ` · US$ ${json.costUsd.toFixed(3)}` : ''}`;
+      const meta = `${PROVIDER_NAMES[json.provider]}, ${Math.round(json.durationMs / 1000)}s${json.costUsd ? `, US$ ${json.costUsd.toFixed(3)}` : ''}`;
       setMessage({ kind: 'info', text: json.notes ? `${json.notes} (${meta})` : `Pronto em ${meta}.` });
     } catch (e) {
       if ((e as Error).name !== 'AbortError') setMessage({ kind: 'error', text: (e as Error).message });
@@ -112,14 +154,37 @@ export function AiPanel({
     }
   };
 
-  if (status === 'offline') {
+  if (status === 'noServer') {
     return (
       <div className="ai ai-off">
         <Sparkles size={16} />
         <p>
-          Assistente Claude indisponível. Rode <code>npm run dev</code> nesta máquina (com o Claude Code logado) para gerar e ajustar
-          anúncios por texto.
+          Assistente de IA indisponível. Rode <code>npm run dev</code> nesta máquina (com o Claude Code ou o Gemini CLI logado) para
+          gerar e ajustar anúncios por texto.
         </p>
+      </div>
+    );
+  }
+
+  if (status === 'noAi' && ai) {
+    return (
+      <div className="ai ai-off">
+        <Sparkles size={16} />
+        <div className="ai-off-body">
+          <p>
+            <strong>Nenhuma IA pronta nesta máquina.</strong> O assistente usa o Claude Code ou o Gemini CLI, instalado e logado.
+          </p>
+          <ul>
+            {ai.providers.map((p) => (
+              <li key={p.id}>
+                <strong>{PROVIDER_NAMES[p.id]}:</strong> {p.detail}
+              </li>
+            ))}
+          </ul>
+          <button type="button" className="btn sm" onClick={() => check(true)}>
+            <RefreshCw size={14} /> Verificar de novo
+          </button>
+        </div>
       </div>
     );
   }
@@ -128,8 +193,28 @@ export function AiPanel({
     <div className="ai">
       <div className="ai-head">
         <Sparkles size={16} />
-        <strong>Assistente Claude</strong>
-        <span className={`dot ${status}`} aria-label={status === 'online' ? 'conectado' : 'verificando'} />
+        {/* Com mais de uma IA pronta, o seletor ao lado já diz qual está em uso. */}
+        <strong>{status !== 'online' ? 'Assistente de IA' : ready.length > 1 ? 'Assistente' : `Assistente ${providerName}`}</strong>
+        <span
+          className={`dot ${status}`}
+          aria-label={status === 'online' ? 'conectado' : 'verificando'}
+          title={ai?.providers.find((p) => p.id === provider)?.detail}
+        />
+        {ready.length > 1 && (
+          <select
+            className="input ai-provider"
+            aria-label="IA usada pelo assistente"
+            value={provider ?? ''}
+            disabled={!!busy}
+            onChange={(e) => choose(e.target.value as ProviderId)}
+          >
+            {ready.map((p) => (
+              <option key={p.id} value={p.id}>
+                {PROVIDER_NAMES[p.id]}
+              </option>
+            ))}
+          </select>
+        )}
         {undo && !busy && (
           <button
             type="button"
@@ -241,7 +326,7 @@ export function AiPanel({
       {folderPhotos && (
         <p className="msg">
           {tray.length
-            ? `${photos.length} de ${tray.length} foto${tray.length > 1 ? 's' : ''} da pasta vão para o Claude${tray.length > MAX_PHOTOS ? ` (máx. ${MAX_PHOTOS})` : ''}. Clique no ✓ para deixar uma de fora.`
+            ? `${photos.length} de ${tray.length} foto${tray.length > 1 ? 's' : ''} da pasta vão para o ${providerName}${tray.length > MAX_PHOTOS ? ` (máx. ${MAX_PHOTOS})` : ''}. Clique no ✓ para deixar uma de fora.`
             : 'Solte fotos aqui ou copie para a pasta imagens/ do projeto.'}
         </p>
       )}

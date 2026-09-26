@@ -4,8 +4,8 @@ import { CONDITION_LABELS, DELIVERY_LABELS } from './format.ts';
 import { uid } from '../defaults.ts';
 
 /**
- * Formato que o Claude lê e devolve: os textos do anúncio, com imagens trocadas por índices de foto
- * (foto-1, foto-2...). Isso mantém o JSON pequeno e deixa o Claude escolher qual foto vai onde.
+ * Formato que a IA (Claude ou Gemini) lê e devolve: os textos do anúncio, com imagens trocadas por índices de
+ * foto (foto-1, foto-2...). Isso mantém o JSON pequeno e deixa a IA escolher qual foto vai onde.
  */
 export interface AiDraft {
   badge: string;
@@ -26,13 +26,43 @@ export interface AiDraft {
 
 export interface AiResult {
   draft: AiDraft;
-  /** Observações do Claude para o usuário (dúvidas, dados que faltaram). */
+  /** Observações da IA para o usuário (dúvidas, dados que faltaram). */
   notes: string;
 }
 
-export type AiRequest =
-  | { mode: 'generate'; instruction: string; photos: string[]; draft: AiDraft }
-  | { mode: 'tweak'; instruction: string; photos: string[]; draft: AiDraft };
+/** CLIs de IA que o editor sabe usar. */
+export type ProviderId = 'claude' | 'gemini';
+export const PROVIDER_NAMES: Record<ProviderId, string> = { claude: 'Claude', gemini: 'Gemini' };
+
+export interface ProviderStatus {
+  id: ProviderId;
+  installed: boolean;
+  /** Instalado e com login que funciona. */
+  ready: boolean;
+  /** Frase para o usuário: como está logado, ou o que falta fazer. */
+  detail: string;
+}
+
+/** Resposta de GET /api/ia. `active` é a IA usada quando o pedido não escolhe uma. */
+export interface AiStatus {
+  active: ProviderId | null;
+  providers: ProviderStatus[];
+}
+
+export type AiRequest = {
+  mode: 'generate' | 'tweak';
+  instruction: string;
+  photos: string[];
+  draft: AiDraft;
+  /** IA escolhida no editor; sem ela (ou se não estiver pronta), vale a `active`. */
+  provider?: ProviderId;
+};
+
+export interface RunInfo {
+  provider: ProviderId;
+  durationMs: number;
+  costUsd: number | null;
+}
 
 const str = { type: 'string' } as const;
 const photoRef = { type: ['integer', 'null'], minimum: 1 } as const;
@@ -112,7 +142,7 @@ function iconFromString(value: string, photos: string[]): IconRef {
   return { kind: 'icon', name: isIconName(value) ? value : 'check' };
 }
 
-/** AdData -> rascunho para o Claude. `leadPhotos` (fotos novas) recebem os primeiros números. */
+/** AdData -> rascunho para a IA. `leadPhotos` (fotos novas) recebem os primeiros números. */
 export function toAiDraft(ad: AdData, leadPhotos: string[] = []): { draft: AiDraft; photos: string[] } {
   const index = new PhotoIndex();
   leadPhotos.forEach((p) => index.ref(p));
@@ -149,7 +179,7 @@ export function toAiDraft(ad: AdData, leadPhotos: string[] = []): { draft: AiDra
   return { draft, photos: index.photos };
 }
 
-/** Rascunho do Claude -> AdData, preservando o que o Claude não controla (ajuste fino da imagem, cor de destaque). */
+/** Rascunho da IA -> AdData, preservando o que a IA não controla (ajuste fino da imagem, cor de destaque). */
 export function fromAiDraft(draft: AiDraft, photos: string[], base: AdData): AdData {
   const photo = (n: number | null) => (n ? (photos[n - 1] ?? null) : null);
   const secondary = draft.secondaryPhotos.map(photo).filter((s): s is string => Boolean(s)).slice(0, 2);

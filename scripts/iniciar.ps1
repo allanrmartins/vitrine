@@ -8,7 +8,7 @@ $url = "http://localhost:$port"
 
 function Test-Editor {
     try {
-        $r = Invoke-WebRequest "$url/api/claude" -UseBasicParsing -TimeoutSec 2
+        $r = Invoke-WebRequest "$url/api/ia/saude" -UseBasicParsing -TimeoutSec 2
         return $r.StatusCode -eq 200
     } catch {
         return $false
