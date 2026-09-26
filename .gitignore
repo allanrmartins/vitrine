@@ -1,0 +1,5 @@
+node_modules
+dist
+*.vitrine.json
+release
+Anuncios/

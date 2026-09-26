@@ -1,0 +1,76 @@
+import {
+  Aperture, Award, BatteryFull, Bike, Bluetooth, Box, Cable, Camera, Car, Check, CircuitBoard, Cog, Cpu,
+  Crosshair, Drone, Droplets, Fan, Frame, Gamepad2, Gauge, Hammer, HardDrive, Headphones, Keyboard, Laptop,
+  Layers, Leaf, Lightbulb, MemoryStick, Microchip, Monitor, Mouse, Package, Palette, Plane, Plug, Radio,
+  Ruler, Satellite, Scale, Shirt, ShieldCheck, Smartphone, Sparkles, Speaker, Star, Tag, Thermometer, Timer,
+  Truck, Tv, Usb, Watch, Wifi, Wrench, Zap,
+  type LucideIcon,
+} from 'lucide-react';
+
+/** Catálogo curado de ícones para os destaques, com rótulo em PT-BR para o seletor. */
+export const ICONS = {
+  drone: { Icon: Drone, label: 'Drone' },
+  frame: { Icon: Crosshair, label: 'Frame / estrutura' },
+  cpu: { Icon: Cpu, label: 'Processador / FC' },
+  chip: { Icon: Microchip, label: 'Chip' },
+  board: { Icon: CircuitBoard, label: 'Placa' },
+  motor: { Icon: Fan, label: 'Motor / hélice' },
+  battery: { Icon: BatteryFull, label: 'Bateria' },
+  zap: { Icon: Zap, label: 'Energia / potência' },
+  plug: { Icon: Plug, label: 'Tomada' },
+  cable: { Icon: Cable, label: 'Cabo' },
+  usb: { Icon: Usb, label: 'USB' },
+  camera: { Icon: Camera, label: 'Câmera' },
+  lens: { Icon: Aperture, label: 'Lente' },
+  radio: { Icon: Radio, label: 'Rádio / transmissor' },
+  satellite: { Icon: Satellite, label: 'GPS / satélite' },
+  wifi: { Icon: Wifi, label: 'Wi-Fi' },
+  bluetooth: { Icon: Bluetooth, label: 'Bluetooth' },
+  memory: { Icon: MemoryStick, label: 'Memória' },
+  storage: { Icon: HardDrive, label: 'Armazenamento' },
+  monitor: { Icon: Monitor, label: 'Monitor' },
+  tv: { Icon: Tv, label: 'TV' },
+  laptop: { Icon: Laptop, label: 'Notebook' },
+  phone: { Icon: Smartphone, label: 'Celular' },
+  headphones: { Icon: Headphones, label: 'Fone' },
+  speaker: { Icon: Speaker, label: 'Caixa de som' },
+  keyboard: { Icon: Keyboard, label: 'Teclado' },
+  mouse: { Icon: Mouse, label: 'Mouse' },
+  gamepad: { Icon: Gamepad2, label: 'Controle / game' },
+  watch: { Icon: Watch, label: 'Relógio' },
+  car: { Icon: Car, label: 'Carro' },
+  bike: { Icon: Bike, label: 'Bike' },
+  plane: { Icon: Plane, label: 'Avião' },
+  gauge: { Icon: Gauge, label: 'Desempenho' },
+  timer: { Icon: Timer, label: 'Tempo' },
+  thermometer: { Icon: Thermometer, label: 'Temperatura' },
+  droplets: { Icon: Droplets, label: 'Líquido / proteção' },
+  shield: { Icon: ShieldCheck, label: 'Proteção / garantia' },
+  ruler: { Icon: Ruler, label: 'Medidas' },
+  scale: { Icon: Scale, label: 'Peso' },
+  frameImg: { Icon: Frame, label: 'Moldura' },
+  layers: { Icon: Layers, label: 'Camadas' },
+  box: { Icon: Box, label: 'Caixa' },
+  package: { Icon: Package, label: 'Pacote' },
+  truck: { Icon: Truck, label: 'Entrega' },
+  wrench: { Icon: Wrench, label: 'Ajuste / manutenção' },
+  hammer: { Icon: Hammer, label: 'Ferramenta' },
+  cog: { Icon: Cog, label: 'Configuração' },
+  palette: { Icon: Palette, label: 'Cor / pintura' },
+  lightbulb: { Icon: Lightbulb, label: 'Luz / LED' },
+  shirt: { Icon: Shirt, label: 'Roupa' },
+  leaf: { Icon: Leaf, label: 'Natural' },
+  tag: { Icon: Tag, label: 'Etiqueta' },
+  award: { Icon: Award, label: 'Premium' },
+  star: { Icon: Star, label: 'Estrela' },
+  sparkles: { Icon: Sparkles, label: 'Novidade' },
+  check: { Icon: Check, label: 'Check' },
+} satisfies Record<string, { Icon: LucideIcon; label: string }>;
+
+export type IconName = keyof typeof ICONS;
+
+export const ICON_NAMES = Object.keys(ICONS) as IconName[];
+
+export function isIconName(value: string): value is IconName {
+  return value in ICONS;
+}

@@ -1,0 +1,585 @@
+/* Template do anúncio. Tudo em px fixos: o canvas é 1600x900 e é escalado só na pré-visualização. */
+
+.ad {
+  --accent: #e3262e;
+  --hl: #ffc53d;
+  --ink: #f4f5f7;
+  --ink-2: #b9bdc6;
+  --line: rgba(255, 255, 255, 0.14);
+  --panel: rgba(255, 255, 255, 0.045);
+
+  position: relative;
+  width: 1600px;
+  height: 900px;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 400px minmax(0, 1fr) 360px;
+  grid-template-rows: 282px minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'thumbs head head'
+    'left hero right'
+    'left strip strip'
+    'foot foot foot';
+  column-gap: 34px;
+  padding: 34px 40px 0;
+  color: var(--ink);
+  font-family: 'Archivo Variable', 'Archivo', system-ui, sans-serif;
+  font-stretch: 100%;
+  -webkit-font-smoothing: antialiased;
+  background: #0b0c0f;
+}
+.ad *,
+.ad *::before,
+.ad *::after {
+  box-sizing: border-box;
+}
+.ad ul,
+.ad h3,
+.ad figure {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Variações de grade quando alguma seção está vazia. */
+.ad.no-thumbs {
+  grid-template-areas:
+    'head head head'
+    'left hero right'
+    'left strip strip'
+    'foot foot foot';
+}
+.ad.no-left {
+  grid-template-areas:
+    'thumbs head head'
+    'hero hero right'
+    'strip strip strip'
+    'foot foot foot';
+}
+.ad.no-left.no-thumbs {
+  grid-template-areas:
+    'head head head'
+    'hero hero right'
+    'strip strip strip'
+    'foot foot foot';
+}
+.ad.no-right .ad-hero {
+  grid-column-end: 4;
+}
+.ad.no-strip .ad-hero {
+  grid-row-end: 4;
+}
+.ad.no-strip .ad-left {
+  padding-bottom: 20px;
+}
+
+/* ---------- Fundo ---------- */
+.ad-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(900px 620px at 56% 52%, #262a33 0%, rgba(22, 24, 30, 0.6) 45%, transparent 75%),
+    radial-gradient(700px 400px at 100% 0%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(600px 420px at 0% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+    linear-gradient(160deg, #15171c 0%, #0b0c0f 60%, #08090b 100%);
+}
+.ad-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 70% 65% at 55% 50%, #000 20%, transparent 80%);
+}
+
+.ad > :not(.ad-bg):not(.ad-hero) {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---------- Imagem principal ---------- */
+.ad-hero {
+  grid-area: hero;
+  position: relative;
+  z-index: 1;
+  margin: -70px -20px -6px;
+  pointer-events: none;
+}
+.ad-hero-box {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+.ad-hero img {
+  display: block;
+  height: auto;
+  transform-origin: center;
+}
+.ad-hero-glow {
+  position: absolute;
+  inset: 12% 8%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 32%, transparent), transparent);
+  filter: blur(10px);
+}
+.ad-hero.blend img {
+  mask-image: radial-gradient(closest-side, #000 58%, rgba(0, 0, 0, 0.6) 78%, transparent 100%);
+}
+.ad-hero.cutout img {
+  filter: drop-shadow(0 34px 38px rgba(0, 0, 0, 0.65))
+    drop-shadow(0 0 46px color-mix(in srgb, var(--accent) 40%, transparent));
+}
+/*
+ * Recortada: sem fundo, a foto pode crescer bem além da própria célula: desce pela faixa de miniaturas e sobe
+ * por trás do preço (textos e miniaturas ficam por cima, z-index 2), como produto em vitrine.
+ */
+.ad.hero-cutout .ad-hero {
+  grid-row: 2 / 4;
+  margin: -118px -30px -18px;
+}
+.ad.hero-cutout .ad-hero-glow {
+  inset: 14% 10% 8%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 38%, transparent), transparent);
+}
+.ad-hero.card {
+  margin: -40px 30px 16px;
+}
+.ad-hero.card img {
+  border-radius: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55), 0 0 0 10px rgba(255, 255, 255, 0.04);
+}
+
+/* ---------- Miniaturas (imagens secundárias) ---------- */
+.ad-thumbs {
+  grid-area: thumbs;
+  display: grid;
+  gap: 14px;
+  padding-bottom: 22px;
+}
+.ad-thumbs.n2 {
+  grid-template-columns: 1fr 1fr;
+}
+.ad-thumb {
+  border-radius: 20px;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+  background: #1a1c21;
+}
+.ad-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ---------- Cabeçalho ---------- */
+.ad-head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-width: 0;
+  text-align: center;
+}
+.fit-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.12;
+}
+.ad-kicker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 100%;
+  padding: 5px 22px 5px 5px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.ad-badge {
+  flex: none;
+  padding: 4px 16px 5px;
+  border-radius: 11px;
+  background: var(--accent);
+  font-size: 38px;
+  font-weight: 850;
+  font-stretch: 92%;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  line-height: 1.12;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+}
+.ad-subtitle {
+  font-weight: 750;
+  font-stretch: 92%;
+  text-transform: uppercase;
+}
+.ad-title {
+  width: 100%;
+  font-weight: 900;
+  font-stretch: 88%;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  line-height: 1.02;
+  text-shadow: 0 4px 22px rgba(0, 0, 0, 0.6);
+}
+
+.ad-deal {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 18px;
+  max-width: 100%;
+}
+.ad-condition {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 440px;
+  padding: 8px 20px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: rgba(20, 22, 27, 0.92);
+  text-align: left;
+}
+.ad-condition-label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hl);
+}
+.ad-condition strong {
+  white-space: nowrap;
+  font-size: 24px;
+  font-weight: 850;
+  font-stretch: 90%;
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+.ad-condition-note {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-size: 15px;
+  color: var(--ink-2);
+  line-height: 1.2;
+}
+.ad-price-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.ad-price {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 30px 8px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 100%, #fff 8%), var(--accent));
+  box-shadow:
+    0 16px 36px color-mix(in srgb, var(--accent) 40%, transparent),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+.ad-prices {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+.ad-price-label {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  opacity: 0.92;
+}
+.ad-price-label + .ad-price-value {
+  font-size: 58px;
+}
+/* Segundo preço: mesma hierarquia de informação, contorno na cor do tema em vez de preenchido. */
+.ad-price.alt {
+  justify-content: center;
+  background: rgba(20, 22, 27, 0.94);
+  border: 3px solid var(--accent);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+.ad-price.alt .ad-price-label {
+  color: color-mix(in srgb, var(--accent) 35%, #fff);
+}
+.ad-price.alt .ad-price-value,
+.ad-price.alt .ad-price-label + .ad-price-value {
+  font-size: 52px;
+}
+.ad-price-prev {
+  font-size: 20px;
+  font-weight: 700;
+  text-decoration: line-through;
+  opacity: 0.8;
+  line-height: 1.1;
+  margin-top: 4px;
+}
+.ad-price-value {
+  font-size: 66px;
+  font-weight: 900;
+  font-stretch: 90%;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+.ad-price-note {
+  font-size: 15px;
+  color: var(--ink-2);
+  max-width: 340px;
+  line-height: 1.2;
+}
+
+/* ---------- Títulos de seção ---------- */
+.ad-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 0.7em !important;
+  font-size: 1.15em;
+  font-weight: 850;
+  font-stretch: 92%;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+.ad-sec-title::before {
+  content: '';
+  flex: none;
+  width: 0.28em;
+  height: 1.05em;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: skewX(-14deg);
+}
+
+/* ---------- Coluna esquerda: destaques ---------- */
+.ad-left {
+  grid-area: left;
+  min-height: 0;
+  overflow: hidden;
+  padding-bottom: 20px;
+}
+.ad-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 0.72em;
+}
+.ad-highlights li {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+}
+.ad-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.7em;
+  height: 2.7em;
+  border-radius: 0.55em;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  color: var(--ink);
+  overflow: hidden;
+}
+.ad-icon svg {
+  width: 58%;
+  height: 58%;
+}
+.ad-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ad-icon-text {
+  font-size: 0.8em;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+.ad-hl-text {
+  font-size: 1em;
+  font-weight: 500;
+  line-height: 1.22;
+  color: var(--ink);
+}
+.ad-hl-text em {
+  display: block;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--hl);
+}
+
+/* ---------- Coluna direita: diferenciais ---------- */
+.ad-right {
+  grid-area: right;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  padding-top: 6px;
+}
+.ad-right .ad-sec-title {
+  flex-direction: row-reverse;
+}
+.ad-extras {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5em;
+}
+.ad-extras li {
+  font-size: 1em;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+/* ---------- Faixa de miniaturas ---------- */
+.ad-strip {
+  grid-area: strip;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 22px;
+  padding-bottom: 18px;
+  min-width: 0;
+}
+.ad-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.ad-group + .ad-group {
+  padding-left: 22px;
+  border-left: 2px solid var(--line);
+}
+.ad-kit-title {
+  font-size: 22px;
+  font-weight: 850;
+  font-stretch: 92%;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ad-kit-title small {
+  font-size: 0.62em;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.ad-tiles {
+  display: flex;
+  gap: 12px;
+}
+.ad-tile {
+  width: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+.ad-tile-img {
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f6f6f7, #d8d9dd);
+  color: #3a3d44;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45);
+}
+.ad-tile-img {
+  position: relative;
+}
+.ad-tile-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.2);
+  filter: blur(9px) brightness(0.92) saturate(1.1);
+}
+/* Absoluta: dentro do grid da miniatura, height: 100% não limita a foto à caixa e ela vazaria (e seria cortada). */
+.ad-tile-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.ad-tile-img svg {
+  width: 46%;
+  height: 46%;
+}
+.ad-tile figcaption {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.18;
+  text-align: center;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---------- Rodapé ---------- */
+.ad-foot {
+  grid-area: foot;
+  margin: 0 -40px;
+}
+.ad-delivery {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 58px;
+  padding: 0 40px;
+  background: rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  font-weight: 750;
+  font-stretch: 94%;
+}
+.ad-delivery svg {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  color: var(--hl);
+}
+.ad-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 62px;
+  padding: 0 40px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 80%, #000), var(--accent) 50%, color-mix(in srgb, var(--accent) 80%, #000));
+  text-transform: uppercase;
+  font-weight: 900;
+  font-stretch: 92%;
+  letter-spacing: 0.01em;
+}
