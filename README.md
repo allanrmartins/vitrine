@@ -63,6 +63,18 @@ O editor roda no navegador e pode ser hospedado como site estático.
 O assistente de IA só funciona rodando local, porque depende do `claude` ou do `gemini` instalado na máquina.
 Quem vai só usar, sem mexer no código, deve começar pelo [COMECE-AQUI.md](COMECE-AQUI.md).
 
+## Instalar (Windows, um comando)
+
+No PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/allanrmartins/vitrine/main/scripts/instalar.ps1 | iex
+```
+
+O instalador põe o Node.js se faltar, baixa a Vitrine em `%USERPROFILE%\Vitrine`, prepara a IA (usa o Claude Code se já estiver logado, ou instala o Gemini CLI e pede a chave de API), cria o atalho e abre o editor.
+Rodar de novo atualiza sem mexer nos anúncios.
+O passo a passo para quem nunca usou terminal está no [COMECE-AQUI.md](COMECE-AQUI.md).
+
 ## Rodar
 
 ```powershell

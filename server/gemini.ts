@@ -76,15 +76,17 @@ export function geminiAuthMethod(env: NodeJS.ProcessEnv = process.env, home = os
   return null;
 }
 
-/** Traduz os erros de login mais comuns do Gemini CLI para o que o usuário precisa fazer. */
-export function explainGeminiError(text: string): string {
+/** Traduz os erros de login e de cota do Gemini CLI para o que o usuário precisa fazer; null se não reconhece. */
+export function knownGeminiError(text: string): string | null {
   if (/IneligibleTier|no longer supported for Gemini Code Assist/i.test(text)) {
     return 'O Google não aceita mais login com conta pessoal no Gemini CLI. Crie uma chave de API em https://aistudio.google.com/apikey, salve em GEMINI_API_KEY e, dentro do `gemini`, troque o login com /auth para "Use Gemini API Key" (passo a passo no COMECE-AQUI.md).';
   }
   if (/API key not valid|API_KEY_INVALID/i.test(text)) return 'A chave em GEMINI_API_KEY foi recusada pelo Google. Confira a chave em https://aistudio.google.com/apikey.';
   if (/must specify the GEMINI_API_KEY/i.test(text)) return 'O Gemini CLI está configurado para chave de API, mas GEMINI_API_KEY não está definida.';
-  if (/quota|RESOURCE_EXHAUSTED|429/i.test(text)) return `O Gemini recusou por limite de uso (cota). Espere um pouco ou confira o plano da chave. ${firstLines(text, 200)}`;
-  return firstLines(text);
+  if (/RESOURCE_EXHAUSTED|exceeded your current quota|"code":\s*429/i.test(text)) {
+    return 'O Gemini recusou por limite de uso da chave (cota). Espere um pouco ou confira o plano em https://aistudio.google.com.';
+  }
+  return null;
 }
 
 interface GeminiJson {
@@ -92,22 +94,41 @@ interface GeminiJson {
   error?: { type?: string; message?: string };
 }
 
+/**
+ * Último bloco JSON da saída do `--output-format json`. Na resposta normal ele é tudo o que sai no stdout; no
+ * erro vai para o stderr, depois de avisos e stack traces, começando numa linha que é só "{".
+ */
+export function parseCliJson(text: string): GeminiJson | null {
+  const starts = [...text.matchAll(/^\{\s*$/gm)].map((m) => m.index ?? 0);
+  if (text.trimStart().startsWith('{')) starts.unshift(text.indexOf('{'));
+  for (const i of starts.reverse()) {
+    try {
+      return JSON.parse(text.slice(i)) as GeminiJson;
+    } catch {
+      // Esse "{" não abria o bloco final; tenta o anterior.
+    }
+  }
+  return null;
+}
+
+/** Mensagem mais interna de um erro da API, que o CLI devolve como JSON dentro de JSON dentro de texto. */
+export function innermostMessage(text: string): string {
+  const found = [...text.matchAll(/message\\*"\s*:\s*\\*"((?:[^"\\]|\\[^"\\])+)/g)].map((m) => m[1]);
+  return found.at(-1) ?? text;
+}
+
 /** Roda `gemini -p` com o prompt no stdin e devolve o texto da resposta (ou o erro já traduzido). */
 async function callGemini(launch: Launch, prompt: string, cwd: string | undefined, signal: AbortSignal | undefined, timeoutMs: number) {
   const args = ['-p', 'Siga as instruções acima.', '--output-format', 'json', '--skip-trust'];
   if (process.env.VITRINE_GEMINI_MODEL) args.push('--model', process.env.VITRINE_GEMINI_MODEL);
   const { code, stdout, stderr } = await runProcess(launch, args, { cwd, input: prompt, signal, timeoutMs, notFound: NOT_FOUND });
-  let res: GeminiJson | null = null;
-  try {
-    // O JSON é o último bloco da saída; antes dele podem vir avisos em texto.
-    res = JSON.parse(stdout.slice(stdout.indexOf('{')));
-  } catch {
-    // Saída que não é JSON: provavelmente erro antes de o CLI começar (login, versão do Node).
-  }
-  if (res?.error || code !== 0 || typeof res?.response !== 'string') {
-    throw new Error(explainGeminiError(res?.error?.message || stderr || stdout || `gemini saiu com código ${code}`));
-  }
-  return res.response;
+  const res = parseCliJson(stdout) ?? parseCliJson(stderr);
+  if (code === 0 && !res?.error && typeof res?.response === 'string') return res.response;
+  // Os erros conhecidos (conta recusada, chave inválida, cota) podem aparecer em qualquer parte da saída.
+  const known = knownGeminiError(`${stderr}\n${stdout}`);
+  if (known) throw new Error(known);
+  const detail = res?.error?.message ? innermostMessage(res.error.message) : firstLines(stderr || stdout);
+  throw new Error(`O Gemini CLI falhou: ${detail || `saiu com código ${code}`}`);
 }
 
 /**

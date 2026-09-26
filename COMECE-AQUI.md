@@ -11,29 +11,58 @@ Se tiver os dois, dá para escolher no editor.
 
 Código: https://github.com/allanrmartins/vitrine
 
-## 1. O que você precisa
+## 1. Instalar no Windows (um comando)
+
+Não precisa saber usar terminal: o instalador faz tudo e pergunta só o necessário.
+
+1. Aperte a tecla **Windows**, digite **PowerShell** e aperte **Enter**.
+   Abre uma janela azul ou preta com um cursor piscando.
+2. Copie a linha abaixo, clique com o **botão direito** dentro da janela (isso cola) e aperte **Enter**:
+
+   ```powershell
+   irm https://raw.githubusercontent.com/allanrmartins/vitrine/main/scripts/instalar.ps1 | iex
+   ```
+
+3. Acompanhe as mensagens e responda o que ele perguntar:
+   - Se faltar o Node.js, ele instala sozinho.
+     O Windows pode perguntar se permite alterações: clique em **Sim**.
+   - Se você já tem o Claude Code logado, ele usa o Claude e pergunta se quer o Gemini também.
+   - Para o Gemini, ele abre a página do Google AI Studio no navegador.
+     Entre com a sua conta Google, clique em **Create API key**, copie a chave e cole na janela do PowerShell (botão direito).
+     A chave não aparece na tela quando você cola, e isso é normal: é só apertar **Enter**.
+4. No fim aparece **Pronto!**, o atalho **Vitrine** fica na área de trabalho e o editor abre no navegador.
+
+A Vitrine fica em `C:\Users\<seu usuário>\Vitrine`.
+Para atualizar para uma versão nova, cole o mesmo comando de novo: os seus anúncios continuam onde estão.
+
+O instalador instala o Gemini CLI e deixa ele configurado para usar a chave.
+Você não precisa aprender a usar o Gemini CLI: quem conversa com ele é a Vitrine.
+
+## 2. Instalar à mão (Mac, Linux ou se preferir)
+
+### O que você precisa
 
 - Windows 10 ou 11 para ter o atalho na área de trabalho (em Mac/Linux funciona pelo terminal, veja o fim do guia).
 - Node.js 22 ou mais novo: baixe a versão LTS em https://nodejs.org e instale com as opções padrão.
-- Uma das duas IAs no terminal, com login feito (próxima seção).
+- Uma das duas IAs no terminal, com login feito (a seguir).
 
-## 2. Deixar a IA pronta
+### Deixar a IA pronta
 
 Faça só a parte da IA que você usa.
 
-### Se você usa o Claude Code
+#### Se você usa o Claude Code
 
 1. Confira no terminal: `claude --version`.
    Se não existir, instale seguindo https://claude.com/claude-code.
 2. Confira o login: `claude auth status` tem que mostrar `"loggedIn": true`.
    Se não, rode `claude` uma vez e entre na sua conta.
 
-### Se você usa o Gemini CLI
+#### Se você usa o Gemini CLI
 
 1. Confira no terminal: `gemini --version`.
    Se não existir, instale com `npm install -g @google/gemini-cli`.
 2. Faça um teste de verdade: `gemini -p "responda ok"`.
-   Se responder, pule para a seção 3.
+   Se responder, pule para "Baixar e instalar a Vitrine".
 3. Se aparecer um erro falando em **"no longer supported for Gemini Code Assist for individuals"**: desde 18/06/2026 o Google não aceita mais login com conta pessoal no Gemini CLI (vale para a conta gratuita, AI Pro e Ultra).
    A saída é usar uma chave de API:
    1. Entre em https://aistudio.google.com/apikey com a sua conta Google e clique em **Create API key**.
@@ -50,7 +79,7 @@ Faça só a parte da IA que você usa.
 
    Guarde a chave só para você: não mande para ninguém e não cole em arquivos do projeto.
 
-## 3. Baixar e instalar a Vitrine
+### Baixar e instalar a Vitrine
 
 O jeito mais fácil é deixar a sua IA fazer tudo.
 Abra o terminal numa pasta fixa (por exemplo `C:\`, não em Downloads, porque o atalho aponta para lá), rode `claude` ou `gemini` e peça:
@@ -70,7 +99,7 @@ npm install
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\criar-atalho.ps1
 ```
 
-## 4. Abrir e fechar
+## 3. Abrir e fechar
 
 - Clique no atalho **Vitrine**: ele liga o servidor numa janela minimizada chamada "Vitrine - servidor" e abre o editor no navegador (http://localhost:5180).
 - No painel da esquerda, o título mostra **Assistente Claude** ou **Assistente Gemini** com um ponto verde: é a IA que vai ser usada.
@@ -80,7 +109,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\criar-atalho.ps1
 - Para desligar de vez, feche a janela "Vitrine - servidor".
 - Com o servidor desligado o editor não salva (o topo mostra "erro ao salvar").
 
-## 5. Seu primeiro anúncio (5 minutos)
+## 4. Seu primeiro anúncio (5 minutos)
 
 1. Na coluna **Projetos** (esquerda), clique em **Novo anúncio** e dê um nome (ex.: "iphone 13").
    Isso cria a pasta `Anuncios\iphone-13\`.
@@ -95,7 +124,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\criar-atalho.ps1
 6. Clique em **1. Copiar imagem p/ WhatsApp**, cole no grupo (Ctrl+V).
    O botão vira **2. Copiar descrição**: clique, cole no campo de legenda da imagem e envie.
 
-## 6. Ajustar o anúncio
+## 5. Ajustar o anúncio
 
 - **Pedir à IA**: no campo "Ajuste" escreva, por exemplo, "título mais curto" ou "destaca que tem garantia" e clique em Ajustar.
   Só aquilo muda, e "Desfazer" volta.
@@ -105,7 +134,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\criar-atalho.ps1
 - **Descrição**: é gerada dos campos.
   Se você editar o texto à mão, ela para de acompanhar os campos ("Regenerar" volta ao automático).
 
-## 7. A foto principal (hero)
+## 6. A foto principal (hero)
 
 A foto grande no centro faz o anúncio, então capriche nela.
 
@@ -115,7 +144,7 @@ A foto grande no centro faz o anúncio, então capriche nela.
 - **Posicionar**: na prévia, arraste a foto para mover, use a roda do mouse para zoom e dê duplo clique para centralizar.
 - Melhor resultado: produto inteiro, de frente, sobre fundo liso e claro. Áreas cercadas pelo produto (ex.: a mesa vista por dentro de um aro) podem ficar no recorte.
 
-## 8. Truques de nome de arquivo
+## 7. Truques de nome de arquivo
 
 Copiando fotos para a pasta `imagens\` do projeto:
 
@@ -124,7 +153,7 @@ Copiando fotos para a pasta `imagens\` do projeto:
 - Na seção **Imagens da pasta** do painel você vê todas as fotos, onde cada uma está sendo usada, e coloca qualquer uma como principal, secundária, diferencial ou item do kit com um clique.
 - Formatos que o navegador não abre (HEIC do iPhone) aparecem com aviso: converta para JPG.
 
-## 9. Onde fica cada coisa
+## 8. Onde fica cada coisa
 
 ```
 Anuncios\iphone-13\
@@ -139,7 +168,7 @@ Anuncios\iphone-13\
 - Dá para copiar ou renomear a pasta de um anúncio.
   O editor encontra de novo.
 
-## 10. Quanto custa
+## 9. Quanto custa
 
 O editor, o recorte de fundo e a exportação não custam nada.
 Só a geração de texto usa a IA.
@@ -151,11 +180,11 @@ Só a geração de texto usa a IA.
   O editor não mostra o custo das gerações com o Gemini.
   Acompanhe o uso pelo AI Studio.
 
-## 11. Se algo der errado
+## 10. Se algo der errado
 
 - **"Nenhuma IA pronta nesta máquina"**: o painel lista o que falta em cada IA (não instalada, sem login, chave recusada).
-  Resolva no terminal seguindo a seção 2 e clique em **Verificar de novo**.
-- **Gemini: "O Google não aceita mais login com conta pessoal"**: siga o passo 3 do Gemini na seção 2 (chave de API e troca do login com `/auth`).
+  Rode o instalador de novo (seção 1) ou siga "Deixar a IA pronta" na seção 2, e clique em **Verificar de novo**.
+- **Gemini: "O Google não aceita mais login com conta pessoal"**: rode o instalador de novo (seção 1): ele cria a chave de API e troca o login do Gemini CLI.
 - **Criei a chave, mas o editor ainda não vê**: a variável `GEMINI_API_KEY` só vale para programas abertos depois do `setx`.
   Feche a janela "Vitrine - servidor" e abra o atalho de novo.
 - **Ponto do Assistente cinza / "Assistente de IA indisponível"**: o editor não foi aberto pelo atalho ou pelo `npm run dev`.

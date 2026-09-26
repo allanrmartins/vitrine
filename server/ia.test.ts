@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { demoAd } from '../src/defaults.ts';
 import { toAiDraft, type ProviderStatus } from '../src/engine/aiDraft.ts';
-import { checkResult, explainGeminiError, extractJson, geminiAuthMethod } from './gemini.ts';
+import { checkResult, extractJson, geminiAuthMethod, innermostMessage, knownGeminiError, parseCliJson } from './gemini.ts';
 import { forcedProvider, pickProvider } from './ia.ts';
 
 const st = (id: ProviderStatus['id'], ready: boolean): ProviderStatus => ({ id, installed: true, ready, detail: '' });
@@ -63,10 +63,40 @@ describe('login do Gemini CLI', () => {
     expect(geminiAuthMethod({}, fakeHome({ '.gemini/settings.json': settings }))).toBe('conta Google');
   });
   it('explica a recusa da conta pessoal pelo Google', () => {
-    const msg = explainGeminiError('IneligibleTierError: This client is no longer supported for Gemini Code Assist for individuals.');
+    const msg = knownGeminiError('IneligibleTierError: This client is no longer supported for Gemini Code Assist for individuals.') ?? '';
     expect(msg).toMatch(/aistudio\.google\.com\/apikey/);
     expect(msg).toMatch(/GEMINI_API_KEY/);
     expect(msg).toMatch(/\/auth/);
+  });
+});
+
+describe('saída do Gemini CLI', () => {
+  // Mesmo formato do erro real: avisos e stack trace no stderr, e no fim o JSON do --output-format json, com a
+  // mensagem da API como JSON escapado dentro de JSON escapado.
+  const apiError = JSON.stringify({ error: { code: 400, message: 'API key not valid. Please pass a valid API key.', status: 'INVALID_ARGUMENT' } }, null, 2);
+  const cliMessage = JSON.stringify({ error: { message: apiError, code: 400, status: 'Bad Request' } });
+  const stderr = [
+    'Warning: True color (24-bit) support not detected.',
+    'Error when talking to Gemini API _ApiError: {"error":{"code":400}}',
+    '    at async GeminiChat.sendMessageStream (file:///gemini.js:1:1)',
+    '  status: 400',
+    '}',
+    JSON.stringify({ session_id: 'x', error: { type: 'Error', message: cliMessage, code: 400 } }, null, 2),
+  ].join('\n');
+
+  it('acha o JSON final no meio dos avisos do stderr', () => {
+    const res = parseCliJson(stderr);
+    expect(res?.error?.message).toBe(cliMessage);
+    expect(parseCliJson('{\n  "response": "ok"\n}')).toEqual({ response: 'ok' });
+    expect(parseCliJson('só texto, sem JSON')).toBeNull();
+  });
+  it('tira a mensagem de dentro dos JSONs aninhados', () => {
+    expect(innermostMessage(cliMessage)).toBe('API key not valid. Please pass a valid API key.');
+  });
+  it('reconhece a chave inválida e a cota, e não inventa erro conhecido', () => {
+    expect(knownGeminiError(stderr)).toMatch(/foi recusada pelo Google/);
+    expect(knownGeminiError('{"error":{"code": 429,"status":"RESOURCE_EXHAUSTED"}}')).toMatch(/cota/);
+    expect(knownGeminiError('at file.js:429:10 algo quebrou')).toBeNull();
   });
 });
 

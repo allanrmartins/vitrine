@@ -9,6 +9,10 @@ Este arquivo vale para qualquer agente: o `CLAUDE.md` (Claude Code) e o `GEMINI.
 
 ## Instalação (quando o usuário pedir para instalar, configurar ou "criar o atalho")
 
+Para usuário final no Windows, o caminho recomendado é o instalador de um comando, que faz todos os passos abaixo sozinho (inclusive a chave do Gemini):
+`irm https://raw.githubusercontent.com/allanrmartins/vitrine/main/scripts/instalar.ps1 | iex`.
+Os passos a seguir são para quando o agente instala a partir de uma cópia já baixada.
+
 Siga na ordem e confira cada passo antes do próximo; se algo falhar, explique e resolva antes de seguir.
 
 1. Node.js 22 ou mais novo: `node -v`. Se faltar ou for antigo, peça para instalar a versão LTS de https://nodejs.org (não instale sozinho).
@@ -34,12 +38,14 @@ Em macOS/Linux não há atalho: use `npm run dev` e abra o endereço no navegado
 - `server/ia.ts` - detecta qual IA está pronta e despacha o pedido; `claude.ts` e `gemini.ts` rodam cada CLI; `aiShared.ts` tem o prompt, as fotos e a execução.
 - O Claude recebe o schema por `--json-schema`; o Gemini CLI não tem essa opção, então o schema vai no prompt, as fotos vão como `@foto-N.jpg` e a resposta é validada com o `ajv` (uma nova tentativa se vier fora do formato).
 - `prompts/anuncio.md` - regras e tom da IA; mudanças de estilo do texto vão aqui, não no código.
-- `scripts/` - atalho do Windows (`criar-atalho.ps1`, `iniciar.ps1`, `servidor.ps1`).
+- `scripts/` - instalador de um comando (`instalar.ps1`) e atalho do Windows (`criar-atalho.ps1`, `iniciar.ps1`, `servidor.ps1`).
 - `Anuncios/<projeto>/` - dados do usuário: `projeto.json`, `imagens/`, `descricao.txt`, `anuncio.png`. Não apague nem sobrescreva sem pedir. A pasta fica fora do git.
 
 ## Regras do projeto
 
 - Scripts `.ps1` ficam em UTF-8 com BOM (o PowerShell 5.1 lê sem BOM como ANSI e quebra os acentos).
+  Exceção: `scripts/instalar.ps1` fica SEM BOM, porque roda por `irm | iex` e o BOM vira texto na primeira linha.
+- Para testar o instalador sem mexer no sistema: `VITRINE_SIMULAR=1`, `VITRINE_PASTA=<pasta temporária>` e `VITRINE_ORIGEM=<zip local>` (ex.: `git archive --prefix=vitrine-main/ -o x.zip HEAD`), rodando com `Get-Content -Raw -Encoding UTF8 scripts\instalar.ps1 | iex`.
 - `projeto.json` guarda imagens como caminho relativo (`imagens/x.jpg`); o editor converte para URL.
 - O editor recarrega o projeto quando o `projeto.json` muda no disco; mesmo assim, ao editar esse arquivo à mão com o editor aberto, avise o usuário.
 - Antes de encerrar uma mudança: `npm run typecheck`, `npm test` e `npm run build`.
