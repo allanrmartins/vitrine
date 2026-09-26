@@ -115,3 +115,7 @@ Seções vazias somem e o layout se reorganiza.
 npm test          # legenda, preço, conversão do rascunho da IA
 npm run typecheck
 ```
+
+## Licença
+
+MIT. Veja [LICENSE.md](LICENSE.md).
