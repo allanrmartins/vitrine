@@ -1,8 +1,64 @@
-# Vitrine - anúncios para WhatsApp
+# Vitrine - anúncios de venda para grupos de WhatsApp
 
-Editor de imagens de anúncio (16:9, 2400x1350) com legenda pronta para grupos de WhatsApp.
+A Vitrine monta o material de divulgação de um item à venda para postar em grupos de WhatsApp.
+Você entrega as fotos e o que sabe do item (preço, estado, o que acompanha, entrega), e ela devolve duas peças prontas para colar no grupo:
+
+- Uma imagem 16:9 (2400x1350) no estilo de cartaz de loja.
+- A legenda com a formatação do WhatsApp.
+
+O texto é escrito pelo Claude, rodando na sua própria máquina: o editor chama o `claude -p` (Claude Code em modo headless) com as fotos e o prompt de `prompts/anuncio.md`.
+Depois você ajusta à mão no painel ou pede mudanças por texto ("título mais curto", "destaca a garantia").
+
+## O que sai no anúncio
+
+### A imagem
+
+O template usa uma cor de destaque (vermelho, laranja, verde, azul, roxo ou dourado) e organiza o item assim:
+
+- No cabeçalho, um selo chamativo ("VENDE-SE", "BAIXOU!", "OPORTUNIDADE", "TROCO"...) com o título e o subtítulo.
+- O preço em evidência, com o preço anterior riscado quando houver desconto, a forma de pagamento e a condição do item.
+- A foto principal no centro, que pode ter o fundo removido para o produto aparecer maior.
+- Na coluna da esquerda, os destaques com ícone e uma ênfase colorida (ex.: "Com conformal coating").
+- Na coluna da direita, os diferenciais, cada um com a sua foto.
+- Embaixo, uma faixa de miniaturas com o que acompanha.
+- No rodapé, entrega, local e a chamada final ("Interessados chamar no DM!").
+
+Seção vazia some e o layout se reorganiza, então um anúncio simples (foto, título e preço) também fica bem montado.
+
+### A legenda
+
+A legenda repete as informações da imagem em texto, porque muita gente lê o anúncio pela notificação ou pela busca do grupo sem abrir a foto.
+Ela usa emoji como marcador e a formatação nativa do WhatsApp (`*negrito*`, `_itálico_`, `~riscado~`):
+
+```
+🔥 *VENDE-SE - Rotor Riot TANQ 2 + DJI O4 Pro*
+_FPV 5" 6S - Pronto para voar_
+
+💰 *R$ 3.000* ~R$ 3.200~
+💳 Pix ou cartão (juros por conta do comprador)
+🏷️ Condição: *Usado - excelente estado*
+
+*Destaques do build*
+▪️ FC GEP-F722-HD v2, ESC TAKER H60_BLS 60A - *Com conformal coating*
+▪️ DJI O4 Air Unit Pro
+
+*O que acompanha (kit completo)*
+📦 1x Jogo de props Gemfan-Vanover 5136
+📦 Filtro ND8 Speedybee
+
+🚚 Frete por conta do comprador / Retirada em SP
+👉 *Interessados chamar no DM!*
+```
+
+### Postando no grupo
+
+O botão "1. Copiar imagem p/ WhatsApp" copia a imagem; cole no grupo com Ctrl+V.
+O botão vira "2. Copiar descrição": copie e cole no campo de legenda da prévia, e imagem e texto vão juntos numa mensagem só.
+São dois cliques porque o WhatsApp descarta o texto quando ele é colado junto com a imagem.
+
 O editor roda no navegador e pode ser hospedado como site estático.
-Rodando local, ele ganha o Assistente Claude, que chama o `claude -p` com um prompt padrão para montar ou ajustar o anúncio.
+O Assistente Claude só funciona rodando local, porque depende do `claude` instalado na máquina.
+Quem vai só usar, sem mexer no código, deve começar pelo [COMECE-AQUI.md](COMECE-AQUI.md).
 
 ## Rodar
 
@@ -33,11 +89,8 @@ Se o executável estiver em outro lugar, aponte com `CLAUDE_BIN`.
 2. Coloque as fotos do item: solte no Assistente Claude, ou copie direto para `Anuncios/<nome>/imagens` pelo Explorer (elas aparecem sozinhas ao voltar para o editor) e escreva o que souber (preço, estado, o que acompanha, entrega).
 3. "Gerar anúncio com as fotos" preenche todas as seções e escolhe qual foto vai onde.
 4. Refine à mão no painel ou peça ajustes em texto ("título mais curto", "destaca a garantia").
-5. "1. Copiar imagem p/ WhatsApp" copia a imagem; cole no grupo com Ctrl+V.
-   O botão vira "2. Copiar descrição": clique e cole no campo de legenda da prévia da imagem, para ir tudo numa mensagem só.
-   (O WhatsApp ignora texto colado junto com imagem, por isso são dois cliques.)
+5. Poste no grupo com os dois botões de cópia (veja "Postando no grupo" acima).
    "Gerar imagem" só grava o `anuncio.png` na pasta; "Compartilhar" abre o compartilhamento do sistema.
-6. Copie a descrição gerada; ela usa `*negrito*`, `_itálico_` e `~riscado~` do WhatsApp.
 
 ## Pasta de cada anúncio
 
